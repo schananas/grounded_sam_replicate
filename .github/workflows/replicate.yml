@@ -35,9 +35,9 @@ jobs:
           REPLICATE_API_TOKEN: ${{ secrets.REPLICATE_API_TOKEN }}
         run: |
           echo $REPLICATE_API_TOKEN | cog login --token-stdin
-      - name: Download model weights from HuggingFace
+      - name: Download model weights
         run: |
-          cog run script/download-weights.py
+          cog run script/download_weights.py
       - name: Push to Replicate
         run: |
           cog push r8.im/schananas/grounded_sam
