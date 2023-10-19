@@ -1,18 +1,14 @@
-import os
-from IPython.display import display
+
 from PIL import Image, ImageDraw, ImageFont
-from torchvision.ops import box_convert
+
 from GroundingDINO.groundingdino.util import box_ops
-from GroundingDINO.groundingdino.util.utils import get_phrases_from_posmap
+
 from GroundingDINO.groundingdino.util.inference import annotate, load_image, predict
-import supervision as sv
-import cv2
+
 import numpy as np
-import matplotlib.pyplot as plt
-import PIL
-import requests
+
 import torch
-from io import BytesIO
+
 
 
 def detect(image,image_src, text_prompt, model, box_threshold = 0.3, text_threshold = 0.25):
@@ -55,7 +51,7 @@ def draw_mask(mask, image, random_color=True):
 
     return np.array(Image.alpha_composite(annotated_frame_pil, mask_image_pil))
 
-def run_grounding_sam(local_image_path, positive_promt, negative_promt):
+def run_grounding_sam(local_image_path, positive_promt, negative_promt, groundingdino_model, sam_predictor):
     image_source, image = load_image(local_image_path)
 
     annotated_frame, detected_boxes = detect(image, image_source, positive_promt, groundingdino_model)
