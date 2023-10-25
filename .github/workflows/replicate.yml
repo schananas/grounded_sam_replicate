@@ -10,17 +10,18 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v3
-      - name: cleanup unused docker images
+        #to save disk space due to large image size
+      - name: Cleanup unused docker images
         run: |
           sudo apt autoremove --purge
           sudo apt autoclean
           sudo apt clean
           docker system prune -af
-      - name: Log disk usage 1
-        run: df -h
+      #to save disk space due to large image size
       - name: CleanUp hostedtoolcache
         run: rm -rf /opt/hostedtoolcache
-      - name: CleanUp - free_disk_space
+      #to save disk space due to large image size
+      - name: Free disk space
         run: |
            chmod +x ./script/free_disk_space.sh
            ./script/free_disk_space.sh

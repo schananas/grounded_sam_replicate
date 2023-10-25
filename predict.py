@@ -1,37 +1,22 @@
 import os
 import sys
 import subprocess
-import json
-from typing import Any
-import numpy as np
-import random
 import torch
-import torchvision
-import torchvision.transforms as transforms
-from PIL import Image
-import matplotlib.pyplot as plt
 from cog import BasePredictor, Input, Path, BaseModel
 import uuid
 
-from subprocess import call
-
+#install GroundingDINO and segment_anything
 os.environ['CUDA_HOME'] = '/usr/local/cuda-11.7'
 os.environ['AM_I_DOCKER'] = 'true'
 os.environ['BUILD_WITH_CUDA'] = 'true'
 
 env_vars = os.environ.copy()
-
-
 HOME = os.getcwd()
-
 sys.path.insert(0, "weights/Grounded-Segment-Anything/GroundingDINO")
 sys.path.insert(0, "weights/Grounded-Segment-Anything/segment_anything")
-
 os.chdir("/src/weights/Grounded-Segment-Anything/GroundingDINO")
-call("echo $CUDA_HOME", shell=True, env=env_vars)
 subprocess.call([sys.executable, '-m', 'pip', 'install', '-e', '.'], env=env_vars)
 os.chdir(HOME)
-
 os.chdir("/src/weights/Grounded-Segment-Anything/segment_anything")
 subprocess.call([sys.executable, '-m', 'pip', 'install', '-e', '.'], env=env_vars)
 os.chdir(HOME)
