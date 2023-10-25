@@ -1,32 +1,70 @@
+#build:
+#  gpu: true
+#  cuda: "11.6"
+#  python_version: "3.9.16"
+#  system_packages:
+#    - "wget"
+#    - "git"
+#    - "libgl1-mesa-glx"
+#    - "libglib2.0-0"
+#    - "libsm6=2:*"
+#    - "libxext6=2:*"
+#    - "ninja-build"
+#  python_packages:
+#    - "diffusers"
+#    - "safetensors==0.3.1"
+#    - "ftfy==6.1.1"
+#    - "accelerate==0.20.3"
+#    - "compel==1.2.1"
+#    - "omegaconf"
+#    - "gradio"
+#    - "huggingface_hub"
+#    - "matplotlib"
+#    - "numpy"
+#    - "onnxruntime"
+#    - "pycocotools==2.0.6"
+#    - "PyYAML"
+#    - "requests"
+#    - "setuptools"
+#    - "termcolor"
+#    - "timm"
+#    - "transformers"
+#    - "nltk"
+#    - "fairscale"
+#    - "litellm"
+#    - "timm==0.9.2"
+#    - "transformers==4.30.2"
+#    - "fairscale==0.4.13"
+#    - "pycocoevalcap==1.2"
+#    - "torch==1.13.0"
+#    - "torchvision==0.14.0"
+#    - "Pillow==9.5.0"
+#    - "scipy==1.10.1"
+#    - "opencv-python==4.7.0.72"
+#    - "addict==2.4.0"
+#    - "yapf==0.40.0"
+#    - "supervision==0.10.0"
+#   # - "cython"
+#    - git+https://github.com/facebookresearch/segment-anything.git
+#    - git+https://github.com/IDEA-Research/GroundingDINO.git
+#
+#predict: "predict.py:Predictor"
+#
+#
+#
+# Configuration for Cog ⚙️
+# Reference: https://github.com/replicate/cog/blob/main/docs/yaml.md
+
 build:
   gpu: true
   cuda: "11.7"
-  python_version: "3.10"
   system_packages:
     - "libgl1-mesa-glx"
     - "libglib2.0-0"
+    - "build-essential"
+  python_version: "3.10"
   python_packages:
-    - "diffusers"
-    - "safetensors==0.3.1"
-    - "ftfy==6.1.1"
-    - "accelerate==0.20.3"
     - "compel==1.2.1"
-    - "omegaconf"
-    - "gradio"
-    - "huggingface_hub"
-    - "matplotlib"
-    - "numpy"
-    - "onnxruntime"
-    - "pycocotools"
-    - "PyYAML"
-    - "requests"
-    - "setuptools"
-    - "termcolor"
-    - "timm"
-    - "transformers"
-    - "nltk"
-    - "fairscale"
-    - "litellm"
     - "timm==0.9.2"
     - "transformers==4.30.2"
     - "fairscale==0.4.13"
@@ -39,15 +77,7 @@ build:
     - "addict==2.4.0"
     - "yapf==0.40.0"
     - "supervision==0.10.0"
-    #- git+https://github.com/IDEA-Research/GroundingDINO.git
-    #- git+https://github.com/facebookresearch/segment-anything.git
+    - git+https://github.com/openai/CLIP.git
+    - ipython
 
 predict: "predict.py:Predictor"
-
-
-
-
-
-
-
-

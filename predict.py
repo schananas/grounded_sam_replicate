@@ -1,18 +1,42 @@
 import os
 import sys
 import subprocess
-from subprocess import call
-import shutil
-from typing import Iterator
-import torch
-from cog import BasePredictor, Input, Path
-from compel import Compel
-from diffusers.utils import load_image
-import requests
-from PIL import Image
-from io import BytesIO
+import json
+from typing import Any
 import numpy as np
+import random
 import torch
+import torchvision
+import torchvision.transforms as transforms
+from PIL import Image
+import matplotlib.pyplot as plt
+from cog import BasePredictor, Input, Path, BaseModel
+import uuid
+
+from subprocess import call
+
+os.environ['CUDA_HOME'] = '/usr/local/cuda-11.7'
+os.environ['AM_I_DOCKER'] = 'true'
+os.environ['BUILD_WITH_CUDA'] = 'true'
+
+env_vars = os.environ.copy()
+
+
+HOME = os.getcwd()
+
+sys.path.insert(0, "weights/Grounded-Segment-Anything/GroundingDINO")
+sys.path.insert(0, "weights/Grounded-Segment-Anything/segment_anything")
+
+os.chdir("/src/weights/Grounded-Segment-Anything/GroundingDINO")
+call("echo $CUDA_HOME", shell=True, env=env_vars)
+subprocess.call([sys.executable, '-m', 'pip', 'install', '-e', '.'], env=env_vars)
+os.chdir(HOME)
+
+os.chdir("/src/weights/Grounded-Segment-Anything/segment_anything")
+subprocess.call([sys.executable, '-m', 'pip', 'install', '-e', '.'], env=env_vars)
+os.chdir(HOME)
+
+from typing import Iterator
 from huggingface_hub import hf_hub_download
 from groundingdino.util.slconfig import SLConfig
 from groundingdino.models import build_model
@@ -20,34 +44,10 @@ from groundingdino.util.utils import clean_state_dict
 from segment_anything import build_sam, SamPredictor
 from grounded_sam import run_grounding_sam
 
-sys.path.insert(0, "script")
-sys.path.insert(0, "weights/Grounded-Segment-Anything")
-sys.path.insert(0, "weights/Grounded-Segment-Anything/GroundingDINO")
-sys.path.insert(0, "weights/Grounded-Segment-Anything/GroundingDINO/groundingdino")
-sys.path.insert(0, "weights/Grounded-Segment-Anything/segment_anything")
-sys.path.insert(0, "weights/Grounded-Segment-Anything/segment_anything/segment_anything")
-
-os.environ['CUDA_HOME'] = '/usr/local/cuda-11.7'
-
 class Predictor(BasePredictor):
     def setup(self):
         """Load the model into memory to make running multiple predictions efficient"""
         print("Loading pipelines...x")
-
-        # Changing the current path
-        os.chdir("/src/weights/Grounded-Segment-Anything")
-
-        #Installing the required modules
-        subprocess.run([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt'], check=True)
-
-        # Changing to other paths and installing modules
-        folders = ['GroundingDINO', 'segment_anything']
-        for folder in folders:
-          os.chdir(f"/src/weights/Grounded-Segment-Anything/{folder}")
-          subprocess.run([sys.executable, '-m', 'pip', 'install', '.'], check=True)
-
-        # Coming back to the main working directory
-        # os.chdir("/src/weights/Grounded-Segment-Anything")
 
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -86,28 +86,34 @@ class Predictor(BasePredictor):
                 description="Negative mask prompt",
                 default="pants",
             ),
+            adjustment_factor: int = Input(
+                description="Mask Adjustment Factor (-ve for erosion, +ve for dilation)",
+                default=0,
+            ),
     ) -> Iterator[Path]:
         """Run a single prediction on the model"""
-        print("run prediction......")
-        print("start...")
+        predict_id = str(uuid.uuid4())
 
-
-        call("find / -type d -name cuda 2>/dev/null", shell=True)
-
+        print(f"Running prediction: {predict_id}...")
 
         annotated_picture_mask, neg_annotated_picture_mask, mask, inverted_mask = run_grounding_sam(image,
                                                                                                     mask_prompt,
                                                                                                     negative_mask_prompt,
                                                                                                     self.groundingdino_model,
-                                                                                                    self.sam_predictor)
-        yield Path(annotated_picture_mask)
-        yield Path(neg_annotated_picture_mask)
-        yield Path(mask)
-        yield Path(inverted_mask)
+                                                                                                    self.sam_predictor,
+                                                                                                    adjustment_factor)
+        variable_dict = {
+            'annotated_picture_mask': annotated_picture_mask,
+            'neg_annotated_picture_mask': neg_annotated_picture_mask,
+            'mask': mask,
+            'inverted_mask': inverted_mask
+        }
 
-            # output_path = f"/tmp/seed-{this_seed}.png"
-            # output.images[0].save(output_path)
-            # yield Path(output_path)
-            # result_count += 1
+        output_dir = "/tmp/" + predict_id
+        os.makedirs(output_dir, exist_ok=True)  # create directory if it doesn't exist
 
-
+        for var_name, img in variable_dict.items():
+            random_filename = output_dir + "/" + var_name + ".jpg"
+            rgb_img = img.convert('RGB')  # Converting image to RGB
+            rgb_img.save(random_filename)
+            yield Path(random_filename)

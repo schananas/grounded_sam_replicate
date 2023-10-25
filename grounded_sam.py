@@ -1,15 +1,37 @@
 
 from PIL import Image, ImageDraw, ImageFont
+import sys
+sys.path.insert(0, "weights/Grounded-Segment-Anything/GroundingDINO")
+sys.path.insert(0, "weights/Grounded-Segment-Anything/segment_anything")
 
-from GroundingDINO.groundingdino.util import box_ops
-
-from GroundingDINO.groundingdino.util.inference import annotate, load_image, predict
+from groundingdino.util import box_ops
+from groundingdino.util.inference import annotate, load_image, predict
 
 import numpy as np
-
 import torch
+import cv2
 
+def adjust_mask(mask, adjustment_factor):
+    mask = mask.astype(np.uint8)
 
+    if adjustment_factor == 0:  # Just return the mask as is if adjustment factor is 0
+        return mask
+
+    if adjustment_factor < 0:
+        mask = cv2.erode(
+            mask,
+            np.ones((abs(adjustment_factor), abs(adjustment_factor)), np.uint8),
+            iterations=1
+        )
+
+    if adjustment_factor > 0:
+        mask = cv2.dilate(
+            mask,
+            np.ones((adjustment_factor, adjustment_factor), np.uint8),
+            iterations=1
+        )
+
+    return mask
 
 def detect(image,image_src, text_prompt, model, box_threshold = 0.3, text_threshold = 0.25):
     boxes, logits, phrases = predict(
@@ -28,7 +50,7 @@ def segment(image, sam_model, boxes):
     sam_model.set_image(image)
     H, W, _ = image.shape
     boxes_xyxy = box_ops.box_cxcywh_to_xyxy(boxes) * torch.Tensor([W, H, W, H])
-
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     transformed_boxes = sam_model.transform.apply_boxes_torch(boxes_xyxy.to(device), image.shape[:2])
     masks, _, _ = sam_model.predict_torch(
         point_coords = None,
@@ -51,7 +73,7 @@ def draw_mask(mask, image, random_color=True):
 
     return np.array(Image.alpha_composite(annotated_frame_pil, mask_image_pil))
 
-def run_grounding_sam(local_image_path, positive_promt, negative_promt, groundingdino_model, sam_predictor):
+def run_grounding_sam(local_image_path, positive_promt, negative_promt, groundingdino_model, sam_predictor, adjustment_factor):
     image_source, image = load_image(local_image_path)
 
     annotated_frame, detected_boxes = detect(image, image_source, positive_promt, groundingdino_model)
@@ -85,6 +107,9 @@ def run_grounding_sam(local_image_path, positive_promt, negative_promt, groundin
 
     # Use logical operations to subtract the negative mask from the original mask
     final_subtracted_mask = mask & ~neg_mask
+
+    #erode or dilate based on adjustment_factor
+    final_subtracted_mask = adjust_mask(final_subtracted_mask, adjustment_factor)
 
     # Update inverted mask definition
     final_subtracted_inverted_mask = 255 - final_subtracted_mask
