@@ -12,12 +12,11 @@ os.environ['BUILD_WITH_CUDA'] = 'true'
 
 env_vars = os.environ.copy()
 HOME = os.getcwd()
-sys.path.insert(0, "weights/Grounded-Segment-Anything/GroundingDINO")
-sys.path.insert(0, "weights/Grounded-Segment-Anything/segment_anything")
-os.chdir("/src/weights/Grounded-Segment-Anything/GroundingDINO")
+sys.path.insert(0, "weights/GroundingDINO")
+sys.path.insert(0, "weights/segment-anything")
+os.chdir("/src/weights/GroundingDINO")
 subprocess.call([sys.executable, '-m', 'pip', 'install', '-e', '.'], env=env_vars)
-os.chdir(HOME)
-os.chdir("/src/weights/Grounded-Segment-Anything/segment_anything")
+os.chdir("/src/weights/segment-anything")
 subprocess.call([sys.executable, '-m', 'pip', 'install', '-e', '.'], env=env_vars)
 os.chdir(HOME)
 
