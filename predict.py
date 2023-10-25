@@ -87,6 +87,8 @@ class Predictor(BasePredictor):
                                                                                                     self.groundingdino_model,
                                                                                                     self.sam_predictor,
                                                                                                     adjustment_factor)
+        print("Done!")
+
         variable_dict = {
             'annotated_picture_mask': annotated_picture_mask,
             'neg_annotated_picture_mask': neg_annotated_picture_mask,
