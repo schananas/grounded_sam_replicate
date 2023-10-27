@@ -2,7 +2,7 @@
 
 # Grounded Sam
 
-Implementation of Grounding DINO & Segment Anything, and it allows masking based on prompt, which is useful for programmed inpainting.
+Implementation of [Grounding DINO](https://github.com/IDEA-Research/GroundingDINO) & [Segment Anything](https://github.com/facebookresearch/segment-anything), and it allows masking based on prompt, which is useful for programmed inpainting.
 
 This project combines strengths of two different models in order to build a very powerful pipeline for solving complex masking problems.
 
