@@ -73,46 +73,47 @@ def draw_mask(mask, image, random_color=True):
 
     return np.array(Image.alpha_composite(annotated_frame_pil, mask_image_pil))
 
-def run_grounding_sam(local_image_path, positive_promt, negative_promt, groundingdino_model, sam_predictor, adjustment_factor):
+
+def run_grounding_sam(local_image_path, positive_prompt, negative_prompt, groundingdino_model, sam_predictor,
+                      adjustment_factor):
     image_source, image = load_image(local_image_path)
 
-    annotated_frame, detected_boxes = detect(image, image_source, positive_promt, groundingdino_model)
-    neg_annotated_frame, neg_detected_boxes = detect(image, image_source, negative_promt, groundingdino_model)
-
-    combined_frame = np.hstack((annotated_frame, neg_annotated_frame))
+    annotated_frame, detected_boxes = detect(image, image_source, positive_prompt, groundingdino_model)
 
     segmented_frame_masks = segment(image_source, sam_predictor, boxes=detected_boxes)
 
-    neg_segmented_frame_masks = segment(image_source, sam_predictor, boxes=neg_detected_boxes)
-
-
     # Merging all positive masks
-    merged_mask = np.logical_or.reduce(segmented_frame_masks[:,0])
-
-    # Merging all negative masks
-    merged_neg_mask = np.logical_or.reduce(neg_segmented_frame_masks[:,0])
-
-    # Annotation using merged positive mask
-    annotated_frame_with_mask = draw_mask(merged_mask, annotated_frame)
+    merged_mask = np.logical_or.reduce(segmented_frame_masks[:, 0])
 
     # Annotation using merged positive mask
     final_annotated_frame_with_mask = draw_mask(merged_mask, annotated_frame)
 
-    # Annotation using merged negative mask
-    neg_annotated_frame_with_mask = draw_mask(merged_neg_mask, neg_annotated_frame)
-
     # Converting positive mask into PIL image
     mask = (merged_mask.cpu().numpy() * 255).astype(np.uint8)  # Update mask definition
-    neg_mask = (merged_neg_mask.cpu().numpy() * 255).astype(np.uint8)  # Update mask definition
 
-    # Use logical operations to subtract the negative mask from the original mask
-    final_subtracted_mask = mask & ~neg_mask
+    neg_annotated_frame_with_mask = final_annotated_frame_with_mask
 
-    #erode or dilate based on adjustment_factor
-    final_subtracted_mask = adjust_mask(final_subtracted_mask, adjustment_factor)
+    # If negative_prompt is defined and not empty, process negative mask
+    if negative_prompt:
+        neg_annotated_frame, neg_detected_boxes = detect(image, image_source, negative_prompt, groundingdino_model)
+
+        neg_segmented_frame_masks = segment(image_source, sam_predictor, boxes=neg_detected_boxes)
+
+        # Merging all negative masks
+        merged_neg_mask = np.logical_or.reduce(neg_segmented_frame_masks[:, 0])
+
+        # Annotation using merged negative mask
+        neg_annotated_frame_with_mask = draw_mask(merged_neg_mask, neg_annotated_frame)
+
+        neg_mask = (merged_neg_mask.cpu().numpy() * 255).astype(np.uint8)  # Update mask definition
+
+        # Use logical operations to subtract the negative mask from the original mask
+        mask = mask & ~neg_mask
+
+    # erode or dilate based on adjustment_factor
+    final_mask = adjust_mask(mask, adjustment_factor)
 
     # Update inverted mask definition
-    final_subtracted_inverted_mask = 255 - final_subtracted_mask
+    final_inverted_mask = 255 - final_mask
 
-
-    return Image.fromarray(final_annotated_frame_with_mask), Image.fromarray(neg_annotated_frame_with_mask), Image.fromarray(final_subtracted_mask), Image.fromarray(final_subtracted_inverted_mask)
+    return Image.fromarray(final_annotated_frame_with_mask), Image.fromarray(neg_annotated_frame_with_mask), Image.fromarray(final_mask), Image.fromarray(final_inverted_mask)

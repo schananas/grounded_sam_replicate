@@ -1,4 +1,4 @@
-(https://replicate.com/cjwbw/grounded-recognize-anything/badge)](https://replicate.com/cjwbw/grounded-recognize-anything)
+[![Replicate](https://replicate.com/schananas/grounded_sam/badge)](https://replicate.com/schananas/grounded_sam/badge)
 
 # Grounded Sam
 
