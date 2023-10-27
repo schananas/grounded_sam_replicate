@@ -21,11 +21,10 @@ subprocess.run(['wget', 'https://dl.fbaipublicfiles.com/segment_anything/sam_vit
 subprocess.run(['git', 'clone', 'https://github.com/IDEA-Research/GroundingDINO'], check=True)
 subprocess.run(['git', 'clone', 'https://github.com/facebookresearch/segment-anything'], check=True)
 
-
 # Download huggingface models
 def download_model_hf(repo_id, filename, ckpt_config_filename):
-    cache_config_file = hf_hub_download(repo_id=repo_id, filename=ckpt_config_filename, cache_dir="/src/weights/")
-    cache_file = hf_hub_download(repo_id=repo_id, filename=filename, cache_dir="/src/weights/")
+    cache_config_file = hf_hub_download(repo_id=repo_id, filename=ckpt_config_filename, cache_dir=os.getcwd())
+    cache_file = hf_hub_download(repo_id=repo_id, filename=filename, cache_dir=os.getcwd())
     return cache_config_file, cache_file
 
 ckpt_repo_id = "ShilongLiu/GroundingDINO"
